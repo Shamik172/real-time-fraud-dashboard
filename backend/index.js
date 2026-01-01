@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 
 import app from "./app.js";
 import connectDB from "./config/db.js";
+import { initTransactionSocket } from "./sockets/transaction.socket.js";
 
 import { startTransactionStream } from "./services/transactionGenerator.js";
 import { processTransaction } from "./services/transactionService.js";
@@ -25,18 +26,13 @@ const io = new Server(server, {
   }
 });
 
-// Basic socket connection (for now)
-io.on("connection", (socket) => {
-  console.log("Client connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id);
-  });
-});
+// Initialize socket logic
+initTransactionSocket(io);
 
 startTransactionStream(async (tx) => {
   const finalTx = await processTransaction(tx);
-  console.log("Saved Transaction:", finalTx.riskLevel);
+  console.log("tran: ",tx)
+//   console.log("Saved Transaction:", finalTx.riskLevel);
 });
 
 server.listen(PORT, () => {

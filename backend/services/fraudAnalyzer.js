@@ -1,4 +1,6 @@
-export const analyzeTransaction = (transaction) => {
+import { analyzeWithGemini } from "../config/gemini.js";
+
+export const analyzeTransaction = async (transaction) => {
   let riskScore = 0;
   const reasons = [];
 
@@ -29,15 +31,25 @@ export const analyzeTransaction = (transaction) => {
   // Cap risk score at 100
   if (riskScore > 100) riskScore = 100;
 
+  // Gemini AI analysis
+  const aiResult = await analyzeWithGemini(transaction);
+
+  // Weighted final score
+  const finalRiskScore = Math.min(
+    Math.round(riskScore * 0.6 + aiResult.riskScore * 0.4),
+    100
+  );
+
+
   // Risk classification
   let riskLevel = "LOW";
-  if (riskScore >= 70) riskLevel = "HIGH";
-  else if (riskScore >= 40) riskLevel = "MEDIUM";
+  if (finalRiskScore >= 70) riskLevel = "HIGH";
+  else if (finalRiskScore >= 40) riskLevel = "MEDIUM";
 
   return {
     ...transaction,
-    riskScore,
+    riskScore : finalRiskScore,
     riskLevel,
-    reasons
+    reasons: [...reasons, aiResult.reason]
   };
 };
