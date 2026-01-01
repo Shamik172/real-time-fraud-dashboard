@@ -34,11 +34,20 @@ export const analyzeTransaction = async (transaction) => {
   // Gemini AI analysis
   const aiResult = await analyzeWithGemini(transaction);
 
-  // Weighted final score
-  const finalRiskScore = Math.min(
-    Math.round(riskScore * 0.6 + aiResult.riskScore * 0.4),
-    100
-  );
+  let finalRiskScore;
+  let finalReasons = [...reasons];
+
+  if (aiResult.available) {
+    finalRiskScore = Math.min(
+      Math.round(riskScore * 0.6 + aiResult.riskScore * 0.4),
+      100
+    );
+    finalReasons.push(`AI: ${aiResult.reason}`);
+  } else {
+    // Fail-safe behavior
+    finalRiskScore = riskScore;
+    finalReasons.push("AI unavailable — rule-based assessment used");
+  }
 
 
   // Risk classification
@@ -50,6 +59,6 @@ export const analyzeTransaction = async (transaction) => {
     ...transaction,
     riskScore : finalRiskScore,
     riskLevel,
-    reasons: [...reasons, aiResult.reason]
+    reasons: finalReasons
   };
 };

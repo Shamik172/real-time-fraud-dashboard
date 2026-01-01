@@ -7,7 +7,11 @@ const GEMINI_URL =
 export const analyzeWithGemini = async (transaction) => {
   const prompt = `
 Analyze the following transaction for fraud risk.
-Return only a JSON with fields: riskScore (0-100) and reason.
+Return ONLY valid JSON in this format:
+{
+  "riskScore": number (0-100),
+  "reason": string
+}
 
 Transaction:
 Amount: ${transaction.amount}
@@ -26,9 +30,22 @@ Device: ${transaction.device}
     const text =
       response.data.candidates[0].content.parts[0].text;
 
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+
+    return {
+      riskScore: Number(parsed.riskScore),
+      reason: parsed.reason,
+      available: true
+    };
+
   } catch (error) {
     console.error("Gemini error:", error.message);
-    return { riskScore: 0, reason: "Gemini unavailable" };
+
+    // IMPORTANT: signal failure explicitly
+    return {
+      riskScore: null,
+      reason: "Gemini unavailable",
+      available: false
+    };
   }
 };

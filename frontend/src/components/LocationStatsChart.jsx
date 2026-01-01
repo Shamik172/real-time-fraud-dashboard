@@ -1,37 +1,56 @@
 import { Bar } from "react-chartjs-2";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { fetchLocationStats } from "../services/api";
 import { darkChartOptions } from "../charts/darkChartOptions";
 
-const LocationStatsChart = () => {
+const LocationStatsChart = ({ timeWindow }) => {
   const [data, setData] = useState([]);
-  const txCount = useSelector(
-    (state) => state.transactions.list.length
-  );
 
   useEffect(() => {
-    fetchLocationStats().then((res) => setData(res.data));
-  }, [txCount]);
-
-  const sorted = [...data].sort((a, b) => b.count - a.count);
+    fetchLocationStats(timeWindow).then((res) => setData(res.data));
+  }, [timeWindow]);
 
   return (
-    <div className="h-[260px]">
+    <div className="h-[280px]">
       <Bar
         data={{
-          labels: sorted.map((d) => d._id),
+          labels: data.map(d => d.location),
           datasets: [
             {
-              label: "Fraud Count",
-              data: sorted.map((d) => d.count),
-              backgroundColor: "rgba(59,130,246,0.6)", // blue-500
-              borderColor: "rgba(59,130,246,1)",
-              borderWidth: 1
+              label: "Fraud Transactions",
+              data: data.map(d => d.fraudCount),
+              backgroundColor: "rgba(239,68,68,0.75)",
+              borderRadius: 6
             }
           ]
         }}
-        options={darkChartOptions}
+        options={{
+          ...darkChartOptions,
+          plugins: {
+            ...darkChartOptions.plugins,
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const d = data[ctx.dataIndex];
+                  return [
+                    `Fraud: ${d.fraudCount}`,
+                    `Total: ${d.totalCount}`,
+                    `Fraud Rate: ${d.fraudPercentage}%`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "#e5e7eb" }
+            },
+            y: {
+              ticks: { color: "#e5e7eb" },
+              beginAtZero: true
+            }
+          }
+        }}
       />
     </div>
   );

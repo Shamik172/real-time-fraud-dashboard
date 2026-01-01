@@ -1,40 +1,30 @@
 import express from "express";
 import Transaction from "../models/Transaction.js";
+import { getTimeFilter } from "../utils/timeWindow.js";
 
 const router = express.Router();
 
 // Risk Trend Over Time (Line Chart)
-// router.get("/risk-trend", async (req, res) => {
-//   const data = await Transaction.aggregate([
-//     {
-//       $group: {
-//         _id: {
-//           $dateToString: { format: "%Y-%m-%d", date: "$timestamp" }
-//         },
-//         avgRisk: { $avg: "$riskScore" }
-//       }
-//     },
-//     { $sort: { _id: 1 } }
-//   ]);
-
-//   res.json(data);
-// });
-
 router.get("/risk-trend", async (req, res) => {
-  const data = await Transaction.aggregate([
+  const { window } = req.query;
+  const fromDate = getTimeFilter(window);
+
+  const pipeline = [];
+
+  if (fromDate) {
+    pipeline.push({
+      $match: { timestamp: { $gte: fromDate } }
+    });
+  }
+
+  pipeline.push(
     {
-      // Convert timestamp to 5-minute bucket
       $addFields: {
         timeBucket: {
           $toDate: {
             $subtract: [
               { $toLong: "$timestamp" },
-              {
-                $mod: [
-                  { $toLong: "$timestamp" },
-                  1000 * 60 * 5 // 5 minutes
-                ]
-              }
+              { $mod: [{ $toLong: "$timestamp" }, 1000 * 60 * 5] }
             ]
           }
         }
@@ -46,13 +36,12 @@ router.get("/risk-trend", async (req, res) => {
         avgRisk: { $avg: "$riskScore" }
       }
     },
-    {
-      $sort: { _id: 1 }
-    }
-  ]);
+    { $sort: { _id: 1 } }
+  );
 
-  res.json(data);
+  res.json(await Transaction.aggregate(pipeline));
 });
+
 
 
 // Fraud Count by Risk Level (Pie Chart)
@@ -72,18 +61,60 @@ router.get("/risk-distribution", async (req, res) => {
 
 // Fraud by Location (Bar Chart)
 router.get("/location-stats", async (req, res) => {
-  const data = await Transaction.aggregate([
-    {
-      $group: {
-        _id: "$location",
-        count: { $sum: 1 }
-      }
-    },
-    { $sort: { count: -1 } }
-  ]);
+  const { window } = req.query;
+  const fromDate = getTimeFilter(window);
 
-  res.json(data);
+  const pipeline = [];
+
+  if (fromDate) {
+    pipeline.push({
+      $match: { timestamp: { $gte: fromDate } }
+    });
+  }
+
+  pipeline.push({
+    $group: {
+      _id: "$location",
+      totalCount: { $sum: 1 },
+      fraudCount: {
+        $sum: {
+          $cond: [{ $eq: ["$riskLevel", "HIGH"] }, 1, 0]
+        }
+      }
+    }
+  });
+
+  pipeline.push({
+    $project: {
+      location: "$_id",
+      totalCount: 1,
+      fraudCount: 1,
+      fraudPercentage: {
+        $cond: [
+          { $eq: ["$totalCount", 0] },
+          0,
+          {
+            $round: [
+              {
+                $multiply: [
+                  { $divide: ["$fraudCount", "$totalCount"] },
+                  100
+                ]
+              },
+              2
+            ]
+          }
+        ]
+      }
+    }
+  });
+
+  pipeline.push({ $sort: { fraudCount: -1 } });
+
+  res.json(await Transaction.aggregate(pipeline));
 });
+
+
 
 
 

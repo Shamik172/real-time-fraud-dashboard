@@ -15,7 +15,7 @@ const randomFromArray = (arr) =>
 
 // Utility: random transaction amount
 const randomAmount = () =>
-  Math.floor(Math.random() * 10000) + 100;
+  Math.floor(Math.random() * 50000) + 100;
 
 // Generate a single dummy transaction
 export const generateTransaction = () => {
@@ -36,5 +36,5 @@ export const startTransactionStream = (onTransaction) => {
   setInterval(() => {
     const transaction = generateTransaction();
     onTransaction(transaction);
-  }, 50000);
+  }, 500000);
 };

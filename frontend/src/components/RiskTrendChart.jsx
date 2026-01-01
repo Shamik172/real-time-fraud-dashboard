@@ -4,14 +4,14 @@ import { useSelector } from "react-redux";
 import { fetchRiskTrend } from "../services/api";
 import { darkChartOptions } from "../charts/darkChartOptions";
 
-const RiskTrendChart = () => {
+const RiskTrendChart = ({timeWindow}) => {
   const [data, setData] = useState([]);
   const txCount = useSelector(
     (state) => state.transactions.list.length
   );
 
   useEffect(() => {
-    fetchRiskTrend().then((res) => setData(res.data));
+    fetchRiskTrend(timeWindow).then((res) => setData(res.data));
   }, [txCount]);
 
   return (
