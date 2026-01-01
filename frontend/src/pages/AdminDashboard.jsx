@@ -4,6 +4,8 @@ import { useSocket } from "../hooks/useSocket";
 import RiskTrendChart from "../components/RiskTrendChart";
 import RiskDistributionChart from "../components/RiskDistributionChart";
 import LocationStatsChart from "../components/LocationStatsChart";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const getReasonStyle = (reason) => {
   // Gemini failed / unavailable
@@ -23,8 +25,10 @@ const getReasonStyle = (reason) => {
 
 
 
-const Dashboard = () => {
+const AdminDashboard = () => {
   const [timeWindow, setTimeWindow] = useState("overall");
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   useSocket();
 
@@ -36,27 +40,50 @@ const Dashboard = () => {
     (state) => state.transactions.highRisk
   );
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-gray-100 p-6">
       {/* HEADER */}
-      <h1 className="text-3xl font-bold mb-8 tracking-wide">
-        Real-Time Fraud Detection Dashboard
-      </h1>
-      <div className="flex gap-2 mb-6">
-  {["overall", "1h", "1d", "1w", "1m", "1y"].map(w => (
+      <div className="flex flex-col gap-6 mb-8">
+  {/* TOP ROW: TITLE + LOGOUT */}
+  <div className="flex justify-between items-center">
+    <h1 className="text-3xl font-bold tracking-wide">
+      Real-Time Fraud Detection Dashboard
+    </h1>
+
     <button
-      key={w}
-      onClick={() => setTimeWindow(w)}
-      className={`px-3 py-1 rounded ${
-        timeWindow === w
-          ? "bg-blue-500 text-white"
-          : "bg-white/10 text-gray-300"
-      }`}
+      onClick={handleLogout}
+      className="px-4 py-2 rounded-lg 
+                 bg-red-500/20 text-red-400 
+                 border border-red-500/30 
+                 hover:bg-red-500/30 transition"
     >
-      {w.toUpperCase()}
+      Logout
     </button>
-  ))}
+  </div>
+
+  {/* SECOND ROW: TIME WINDOW FILTERS */}
+  <div className="flex gap-2 flex-wrap">
+    {["overall", "1h", "1d", "1w", "1m", "1y"].map((w) => (
+      <button
+        key={w}
+        onClick={() => setTimeWindow(w)}
+        className={`px-3 py-1 rounded text-sm font-medium transition ${
+          timeWindow === w
+            ? "bg-blue-500 text-white"
+            : "bg-white/10 text-gray-300 hover:bg-white/20"
+        }`}
+      >
+        {w.toUpperCase()}
+      </button>
+    ))}
+  </div>
 </div>
+
 
 
       {/* ANALYTICS CARDS */}
@@ -213,4 +240,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;

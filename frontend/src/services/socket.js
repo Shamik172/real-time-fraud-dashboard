@@ -1,7 +1,19 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
 
-export const socket = io(SOCKET_URL, {
-  transports: ["websocket"]
-});
+let socket = null;
+
+export const connectSocket = (token) => {
+  if (socket) socket.disconnect();
+
+  socket = io(SOCKET_URL, {
+    transports: ["websocket"],
+    auth: { token }
+  });
+
+  return socket;
+};
+
+export const getSocket = () => socket;

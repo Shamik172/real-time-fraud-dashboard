@@ -1,19 +1,16 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+});
 
-export const fetchRiskTrend = (window) =>
-  axios.get(`${API_BASE}/api/transactions/risk-trend`, {
-    params: { window }
-  });
+// Attach JWT automatically
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
-export const fetchRiskDistribution = (window) =>
-  axios.get(`${API_BASE}/api/transactions/risk-distribution`, {
-    params: { window }
-  });
-
-export const fetchLocationStats = (window) =>
-  axios.get(`${API_BASE}/api/transactions/location-stats`, {
-    params: { window }
-  });
-
+export default api;

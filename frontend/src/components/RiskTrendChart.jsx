@@ -1,7 +1,7 @@
 import { Line } from "react-chartjs-2";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { fetchRiskTrend } from "../services/api";
+import { fetchRiskTrend } from "../services/transactionApi";
 import { darkChartOptions } from "../charts/darkChartOptions";
 
 const RiskTrendChart = ({timeWindow}) => {

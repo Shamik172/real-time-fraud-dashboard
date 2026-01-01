@@ -1,6 +1,6 @@
 import { Bar } from "react-chartjs-2";
 import { useEffect, useState } from "react";
-import { fetchLocationStats } from "../services/api";
+import { fetchLocationStats } from "../services/transactionApi";
 import { darkChartOptions } from "../charts/darkChartOptions";
 
 const LocationStatsChart = ({ timeWindow }) => {

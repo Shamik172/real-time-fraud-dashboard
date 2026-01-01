@@ -1,11 +1,34 @@
 import express from "express";
 import Transaction from "../models/Transaction.js";
 import { getTimeFilter } from "../utils/timeWindow.js";
+import { protect, adminOnly } from "../middlewares/auth.js";
+import User from "../models/User.js";
+import { generateUserTransaction } from "../services/transactionGenerator.js";
+import { processTransaction } from "../services/transactionService.js";
 
 const router = express.Router();
 
+// user generates new transaction
+router.post("/generate", protect, async (req, res) => {
+  const user = await User.findById(req.user.userId);
+
+  const tx = generateUserTransaction(user);
+  const saved = await processTransaction(tx);
+
+  res.json(saved);
+});
+
+router.get("/my", protect, async (req, res) => {
+  const data = await Transaction.find({
+    userId: req.user.userId
+  }).sort({ timestamp: -1 });
+
+  res.json(data);
+});
+
+
 // Risk Trend Over Time (Line Chart)
-router.get("/risk-trend", async (req, res) => {
+router.get("/risk-trend", protect, adminOnly, async (req, res) => {
   const { window } = req.query;
   const fromDate = getTimeFilter(window);
 
@@ -42,10 +65,8 @@ router.get("/risk-trend", async (req, res) => {
   res.json(await Transaction.aggregate(pipeline));
 });
 
-
-
 // Fraud Count by Risk Level (Pie Chart)
-router.get("/risk-distribution", async (req, res) => {
+router.get("/risk-distribution", protect, adminOnly, async (req, res) => {
   const data = await Transaction.aggregate([
     {
       $group: {
@@ -60,7 +81,7 @@ router.get("/risk-distribution", async (req, res) => {
 
 
 // Fraud by Location (Bar Chart)
-router.get("/location-stats", async (req, res) => {
+router.get("/location-stats", protect, adminOnly, async (req, res) => {
   const { window } = req.query;
   const fromDate = getTimeFilter(window);
 
@@ -113,9 +134,6 @@ router.get("/location-stats", async (req, res) => {
 
   res.json(await Transaction.aggregate(pipeline));
 });
-
-
-
 
 
 export default router;

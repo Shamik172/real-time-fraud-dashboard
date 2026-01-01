@@ -1,6 +1,6 @@
 import { Doughnut } from "react-chartjs-2";
 import { useEffect, useState } from "react";
-import { fetchRiskDistribution } from "../services/api";
+import { fetchRiskDistribution } from "../services/transactionApi";
 import { darkChartOptions } from "../charts/darkChartOptions";
 
 const RiskDistributionChart = ({ timeWindow }) => {
