@@ -5,6 +5,9 @@ import dotenv from "dotenv";
 import app from "./app.js";
 import connectDB from "./config/db.js";
 
+import { startTransactionStream } from "./services/transactionGenerator.js";
+import { processTransaction } from "./services/transactionService.js";
+
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
@@ -29,6 +32,11 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
   });
+});
+
+startTransactionStream(async (tx) => {
+  const finalTx = await processTransaction(tx);
+  console.log("Saved Transaction:", finalTx.riskLevel);
 });
 
 server.listen(PORT, () => {
