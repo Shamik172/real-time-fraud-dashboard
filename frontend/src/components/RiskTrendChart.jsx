@@ -12,7 +12,7 @@ const RiskTrendChart = ({timeWindow}) => {
 
   useEffect(() => {
     fetchRiskTrend(timeWindow).then((res) => setData(res.data));
-  }, [txCount]);
+  }, [timeWindow]);
 
   return (
     <div className="h-[260px]">

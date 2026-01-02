@@ -67,16 +67,25 @@ router.get("/risk-trend", protect, adminOnly, async (req, res) => {
 
 // Fraud Count by Risk Level (Pie Chart)
 router.get("/risk-distribution", protect, adminOnly, async (req, res) => {
-  const data = await Transaction.aggregate([
-    {
-      $group: {
-        _id: "$riskLevel",
-        count: { $sum: 1 }
-      }
-    }
-  ]);
+  const { window } = req.query;
+  const fromDate = getTimeFilter(window);
 
-  res.json(data);
+  const pipeline = [];
+
+  if (fromDate) {
+    pipeline.push({
+      $match: { timestamp: { $gte: fromDate } }
+    });
+  }
+
+  pipeline.push({
+    $group: {
+      _id: "$riskLevel",
+      count: { $sum: 1 }
+    }
+  });
+
+  res.json(await Transaction.aggregate(pipeline));
 });
 
 

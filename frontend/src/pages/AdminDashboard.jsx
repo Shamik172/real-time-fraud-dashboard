@@ -22,9 +22,6 @@ const getReasonStyle = (reason) => {
   return "bg-orange-500/20 text-orange-300 border-orange-500/30";
 };
 
-
-
-
 const AdminDashboard = () => {
   const [timeWindow, setTimeWindow] = useState("overall");
   const { logout } = useAuth();
@@ -191,7 +188,7 @@ const AdminDashboard = () => {
         </div>
 
       {/* HIGH RISK ALERTS */}
-      <div className="glass rounded-xl p-4 mb-8">
+      <div className="glass rounded-xl p-4 mb-8 mt-8">
   <h2 className="text-lg font-semibold text-red-400 mb-4 flex items-center gap-2">
     🚨 High Risk Alerts
   </h2>
